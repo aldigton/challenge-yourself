@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Constitution Challenge</title>
+    
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --white: #ffffff;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --purple: #8e44ad;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f7;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        h1 { font-size: 1.8rem; }
+        h2 { font-size: 1.4rem; color: var(--accent); }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .active {
+            display: block;
+        }
+
+        /* Question Box Styling */
+        .question-box {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #e1e8ed;
+            background: #fafafa;
+            border-radius: 8px;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* LOGIC HIDDEN (Hard Hide) */
+        .logic-hidden {
+            display: none !important;
+        }
+
+        /* REVEAL ANIMATION STATES */
+        .reveal-pending {
+            display: none;
+        }
+
+        .reveal-visible {
+            display: block;
+            animation: slideUp 0.6s forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+            color: #2c3e50;
+        }
+
+        .options {
+            display: flex;
+            gap: 10px;
+        }
+
+        label {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            background: var(--white);
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        label:hover {
+            border-color: var(--accent);
+        }
+
+        label.selected-option {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        label.correct-answer {
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
+            color: white !important;
+        }
+        label.correct-answer::after {
+            content: " ✓";
+            font-weight: 900;
+        }
+        
+        label.incorrect-option {
+            background-color: var(--danger) !important;
+            border-color: var(--danger) !important;
+            color: white !important;
+        }
+        label.incorrect-option::after {
+            content: " ✗";
+            font-weight: 900;
+        }
+
+        input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            margin: 0;
+            pointer-events: none;
+        }
+
+        label:focus-within {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        /* HIDE NEXT BUTTON IN PART 3 UNTIL DONE */
+        #p3-next-btn {
+            display: none; 
+        }
+        #p3-next-btn.btn-visible {
+            display: block;
+        }
+
+        button {
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-next:hover { background-color: #1a252f; }
+        
+        .btn-back {
+            background-color: #95a5a6;
+            color: white;
+            flex: 1;
+        }
+
+        .start-btn {
+            background-color: var(--accent);
+            color: white;
+            font-size: 1.2em;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .note {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .summary-box {
+            padding: 20px;
+            border-radius: 10px;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+        }
+
+        .evidence-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #555;
+            text-align: left;
+        }
+
+        .evidence-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .evidence-box li {
+            margin-bottom: 5px;
+        }
+
+        .path-a { border-left: 5px solid var(--success); }
+        .path-b { border-left: 5px solid var(--primary); }
+        .path-c { border-left: 5px solid var(--warning); }
+        .path-d { border-left: 5px solid var(--danger); }
+        .path-e { border-left: 5px solid var(--purple); }
+
+        /* Inline error banner (replaces alert()) */
+        .error-banner {
+            display: none;
+            background: #fdecea;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        .error-banner.visible { display: block; }
+
+        /* Progress indicator */
+        .progress-indicator {
+            text-align: center;
+            font-size: 0.8em;
+            color: #95a5a6;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .progress-dots span {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #dde3e7;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .progress-dots span.active-dot { background: var(--accent); }
+        .progress-dots span.done-dot   { background: var(--success); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="page-start" class="page active">
+        <h1 style="margin-bottom: 5px;">The Constitution Challenge 🇮🇳</h1>
+        <h3 style="text-align: center; color: #7f8c8d; font-weight: 400; margin-top: 0;">Trivia • Rights • Reality</h3>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="text-align:center;">Think you know the Law of the Land? Take this 2-minute challenge to test your IQ and discover your legal standing!</p>
+        <button class="start-btn" onclick="nextPage(1)">Let's Play!</button>
+    </div>
+
+    <div id="page-1" class="page">
+        <div class="progress-indicator">
+            Round 1 of 3
+            <div class="progress-dots">
+                <span class="active-dot"></span><span></span><span></span>
+            </div>
+        </div>
+        <h2>Round 1: Fact vs. Fiction 🧠</h2>
+        <p class="note">Let's warm up! How well do you know India?</p>
+        <div id="q1-container"></div>
+        <div id="error-p1" class="error-banner">⚠ Please answer all questions before continuing.</div>
+        <div class="btn-container">
+            <button class="btn-back" onclick="prevPage(0)">Back</button>
+            <button class="btn-next" onclick="nextPage(2)">Next Level</button>
+        </div>
+    </div>
+
+    <div id="page-2" class="page">
+        <div class="progress-indicator">
+            Round 2 of 3
+            <div class="progress-dots">
+                <span class="done-dot"></span><span class="active-dot"></span><span></span>
+            </div>
+        </div>
+        <h2>Round 2: Know Your Power 🛡️</h2>
+        <p class="note">Unlock your legal superpowers (Rights & Safety).</p>
+        <div id="q2-container"></div>
+        <div id="error-p2" class="error-banner">⚠ Please answer all questions before continuing.</div>
+        <div class="btn-container">
+            <button class="btn-back" onclick="prevPage(1)">Back</button>
+            <button class="btn-next" onclick="nextPage(3)">Final Round</button>
+        </div>
+    </div>
+
+    <div id="page-3" class="page">
+        <div class="progress-indicator">
+            Round 3 of 3
+            <div class="progress-dots">
+                <span class="done-dot"></span><span class="done-dot"></span><span class="active-dot"></span>
+            </div>
+        </div>
+        <h2>Final Round: The Honest Truth 🪞</h2>
+        <p class="note">Moving from the Law Book to the Mirror. Be honest!</p>
+        <div id="q3-container"></div>
+        <div id="error-p3" class="error-banner">⚠ Please answer all visible questions before seeing results.</div>
+        <div class="btn-container">
+            <button class="btn-back" onclick="prevPage(2)">Back</button>
+            <button id="p3-next-btn" class="btn-next" onclick="finishSurvey()">See Results</button>
+        </div>
+    </div>
+
+    <div id="page-end" class="page">
+        <h1>The Big Reveal 🔍</h1>
+        
+        <div id="summary-content">
+            </div>
+
+        <br>
+        <button class="start-btn" style="background-color: #95a5a6;" onclick="resetSurvey()">Play Again</button>
+    </div>
+
+</div>
+
+<script>
+    // --- QUESTION DATA ---
+    const questions = {
+        p1: [
+            { q: "1. True or False: India officially became a Republic on 26 Jan 1950?", ans: "Yes", type: "fact" },
+            { q: "2. Trivia: Did the writing of the Constitution start BEFORE Independence?", ans: "Yes", type: "fact" },
+            { q: "3. Myth Buster: Is it true Indian citizens cannot hold two passports (Dual Citizenship)?", ans: "Yes", type: "fact" }, 
+            { q: "4. Personal Check: Have you ever read the famous Preamble page?", ans: null, type: "survey" } 
+        ],
+        p2: [
+            { q: "5. Are you aware that under ARTICLE 25 (1), you have the right to believe in any God?", ans: "Yes", type: "fact" },
+            { q: "6. Are you aware that under ARTICLE 25 (1), you have the right to freely share (propagate) your religion?", ans: "Yes", type: "fact" },
+            { q: "7. Are you aware that the Supreme Court says the right to share does NOT mean the right to force anyone to convert?", ans: "Yes", type: "fact" },
+            { q: "8. Are you aware that under ARTICLE 19, you are allowed to speak about your beliefs?", ans: "Yes", type: "fact" },
+            { q: "9. Are you aware that under BNS Section 196, using Hate Speech against any religion is a crime?", ans: "Yes", type: "fact" }
+        ],
+        p3: [
+            // PART 3 - SLOW REVEAL SEQUENCE
+            { q: "10. Do you believe in a God right now?", ans: null, type: "survey" },
+            
+            // Q11-Q19 hidden by default in render loop
+            { q: "11. Have you ever told a lie? (Be honest)", ans: null, type: "survey" }, 
+            { q: "12. Have you ever taken something that is not yours (stolen)?", ans: null, type: "survey" }, 
+            { q: "13. Do you think these actions (lying/stealing) are bad?", ans: null, type: "survey" }, 
+            { q: "14. Do you feel sorry for doing them?", ans: null, type: "survey" },
+            { q: "15. If police file a case, will the BNS (Law) forgive you just because you said sorry?", ans: "No", type: "fact" }, 
+            { q: "16. If a judge simply lets a person who broke the law go without punishment, is that real Justice?", ans: "No", type: "fact" }, 
+            
+            // GATEKEEPER QUESTIONS
+            { q: "17. Do you think God might punish you for lying or stealing?", ans: null, type: "survey" },
+            { q: "18. Are you sure your God can forgive you without punishment?", ans: null, type: "survey" },
+            { q: "19. Should God be a Strict Judge OR a Forgiving Friend?", ans: null, type: "choice" }
+        ]
+    };
+
+    let allAnswers = {};
+
+    // --- QUESTION NUMBER CONSTANTS ---
+    const PART3_START     = 10;   // first question in Part 3
+    const GATEKEEPER_LAST = 16;   // last standard question before conditional block
+    const EXTRA_START     = 17;   // first gatekeeper question
+    const EXTRA_LAST      = 19;   // last gatekeeper / final question
+
+    // --- RENDER QUESTIONS ---
+    function renderQuestions(qList, containerId, startNum) {
+        const container = document.getElementById(containerId);
+        let html = "";
+        
+        qList.forEach((q, index) => {
+            let qNum = startNum + index;
+            let name = `q${qNum}`;
+            allAnswers[name] = null; 
+            
+            let extraClass = "";
+            if (containerId === 'q3-container' && index > 0) {
+                extraClass = "reveal-pending";
+            }
+            if (qNum >= EXTRA_START) extraClass += " logic-hidden";
+
+            const lockAttr = q.ans ? 'data-lockable="true"' : '';
+
+            if (q.type === "choice") {
+                html += `
+                <div class="question-box ${extraClass}" id="box-${name}" data-q-num="${qNum}" ${lockAttr}>
+                    <div class="question-text">${q.q}</div>
+                    <div class="options">
+                        <label onclick="handleSelection(this, '${name}', null)">
+                            <input type="radio" name="${name}" value="Judge"> Judge
+                        </label>
+                        <label onclick="handleSelection(this, '${name}', null)">
+                            <input type="radio" name="${name}" value="Forgiver"> Forgiver
+                        </label>
+                        <label onclick="handleSelection(this, '${name}', null)">
+                            <input type="radio" name="${name}" value="Both"> Both
+                        </label>
+                    </div>
+                </div>`;
+            } else {
+                html += `
+                <div class="question-box ${extraClass}" id="box-${name}" data-q-num="${qNum}" ${lockAttr}>
+                    <div class="question-text">${q.q}</div>
+                    <div class="options">
+                        <label onclick="handleSelection(this, '${name}', ${q.ans ? `'${q.ans}'` : 'null'})">
+                            <input type="radio" name="${name}" value="Yes"> Yes
+                        </label>
+                        <label onclick="handleSelection(this, '${name}', ${q.ans ? `'${q.ans}'` : 'null'})">
+                            <input type="radio" name="${name}" value="No"> No
+                        </label>
+                    </div>
+                </div>`;
+            }
+        });
+        container.innerHTML = html;
+    }
+
+    // --- SELECTION & REAL-TIME LOGIC ---
+    window.handleSelection = function(label, groupName, correctAns) {
+        const box = label.closest('.question-box');
+
+        // Lock fact questions after first selection
+        if (box.dataset.lockable && allAnswers[groupName]) return;
+
+        const value = label.querySelector('input').value;
+        allAnswers[groupName] = value;
+
+        // Clear any validation red border
+        box.style.border = '';
+        box.style.borderBottom = '1px solid #e1e8ed';
+
+        box.querySelectorAll('label').forEach(lbl => {
+            lbl.classList.remove('selected-option', 'correct-answer', 'incorrect-option');
+        });
+        if (correctAns) {
+            if (value === correctAns) label.classList.add('correct-answer');
+            else {
+                label.classList.add('incorrect-option');
+                // Also highlight the correct answer for learning
+                box.querySelectorAll('label').forEach(lbl => {
+                    if (lbl.querySelector('input').value === correctAns) lbl.classList.add('correct-answer');
+                });
+            }
+        } else {
+            label.classList.add('selected-option');
+        }
+
+        updateGatekeeperState();
+
+        let currentNum = parseInt(groupName.replace('q', ''));
+        if (currentNum >= PART3_START) {
+            let nextNum = currentNum + 1;
+            let nextBox = document.getElementById(`box-q${nextNum}`);
+            
+            if (currentNum === GATEKEEPER_LAST) {
+                setTimeout(() => {
+                    const q17 = document.getElementById(`box-q${EXTRA_START}`);
+                    const btn = document.getElementById('p3-next-btn');
+                    if (!q17.classList.contains('logic-hidden')) {
+                         revealBox(q17); 
+                    } else if (btn.classList.contains('btn-visible')) {
+                         btn.scrollIntoView({behavior: "smooth"});
+                    }
+                }, 100);
+            } 
+            else if (currentNum === EXTRA_LAST) {
+                document.getElementById('p3-next-btn').classList.add('btn-visible');
+                document.getElementById('p3-next-btn').scrollIntoView({behavior: "smooth"});
+            } 
+            else {
+                if(nextBox) revealBox(nextBox);
+            }
+        }
+    };
+
+    // --- REAL-TIME STATE MANAGER ---
+    function updateGatekeeperState() {
+        const qualify = shouldShowExtraQuestions();
+        const finishBtn = document.getElementById('p3-next-btn');
+        const q16 = allAnswers['q16']; 
+        
+        const boxes = [
+            document.getElementById(`box-q${EXTRA_START}`),
+            document.getElementById(`box-q${EXTRA_START + 1}`),
+            document.getElementById(`box-q${EXTRA_LAST}`)
+        ];
+
+        if (qualify) {
+            boxes.forEach(b => b.classList.remove('logic-hidden'));
+            if (allAnswers[`q${EXTRA_LAST}`]) {
+                finishBtn.classList.add('btn-visible');
+            } else {
+                finishBtn.classList.remove('btn-visible');
+            }
+        } else {
+            boxes.forEach(b => b.classList.add('logic-hidden'));
+            if (q16) {
+                finishBtn.classList.add('btn-visible');
+            }
+        }
+    }
+
+    function revealBox(boxElement) {
+        if (boxElement.classList.contains('reveal-pending')) {
+            boxElement.classList.remove('reveal-pending');
+            boxElement.classList.add('reveal-visible');
+            setTimeout(() => {
+                boxElement.scrollIntoView({behavior: "smooth", block: "center"});
+            }, 100);
+        }
+    }
+
+    // --- GATEKEEPER LOGIC ---
+    function shouldShowExtraQuestions() {
+        const q10 = allAnswers['q10']; 
+        const q11 = allAnswers['q11']; 
+        const q12 = allAnswers['q12']; 
+        const q15 = allAnswers['q15']; 
+        const q16 = allAnswers['q16']; 
+
+        const isBeliever = (q10 === 'Yes');
+        const isGuilty = (q11 === 'Yes' || q12 === 'Yes');
+        const isStrict = (q15 === 'No' && q16 === 'No');
+
+        return (isBeliever && isGuilty && isStrict);
+    }
+
+    // --- VALIDATION ---
+    function showError(pageId, show) {
+        const banner = document.getElementById(`error-${pageId}`);
+        if (banner) banner.classList.toggle('visible', show);
+    }
+
+    function validatePage(containerId) {
+        const page = document.getElementById(containerId);
+        const questionBoxes = page.querySelectorAll('.question-box');
+        let allAnswered = true;
+        questionBoxes.forEach(box => {
+            const style = window.getComputedStyle(box);
+            if (style.display !== 'none' && !box.classList.contains('reveal-pending') && !box.classList.contains('logic-hidden')) { 
+                const qNum = box.dataset.qNum;
+                if (!allAnswers[`q${qNum}`]) {
+                    allAnswered = false;
+                    box.style.border = `2px solid var(--danger)`;
+                } else {
+                    box.style.border = "none";
+                    box.style.borderBottom = "1px solid #e1e8ed"; 
+                }
+            }
+        });
+        return allAnswered;
+    }
+
+    function showPage(pageNum) {
+        document.querySelectorAll('.page').forEach(div => div.classList.remove('active'));
+        const pageIds = ['page-start', 'page-1', 'page-2', 'page-3', 'page-end'];
+        document.getElementById(pageIds[pageNum]).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    window.nextPage = function(destinationPage) { 
+        let currentPageIndex = destinationPage - 1;
+        if (currentPageIndex >= 1 && currentPageIndex <= 3) {
+            if (!validatePage(`page-${currentPageIndex}`)) {
+                showError(`p${currentPageIndex}`, true);
+                return;
+            }
+        }
+        showError(`p${currentPageIndex}`, false);
+        showPage(destinationPage); 
+    };
+    window.prevPage = function(dest) { showPage(dest); };
+    
+    // --- 5-PATH LOGIC ENGINE (UPDATED) ---
+    function summarizeResults() {
+        if (!validatePage('page-3')) { showError('p3', true); return; }
+
+        const God = allAnswers['q10'];
+        const Lie = allAnswers['q11'];
+        const Steal = allAnswers['q12'];
+        const Law = allAnswers['q15'];
+        const Judge = allAnswers['q16'];
+        const DivineLaw = allAnswers['q18']; // Q18 Consistency Check
+        const Type = allAnswers['q19']; 
+
+        const isBeliever = (God === 'Yes');
+        const isGuilty = (Lie === 'Yes' || Steal === 'Yes');
+        const isStrictHuman = (Law === 'No' && Judge === 'No');
+        const isStrictDivine = (DivineLaw === 'No'); // Must be No to be consistent
+
+        let message = "";
+        let evidenceList = "";
+        let boxClass = "";
+
+        // EVIDENCE LIST
+        if(Lie === 'Yes') evidenceList += "<li>You were honest about having told a lie.</li>";
+        if(Steal === 'Yes') evidenceList += "<li>You acknowledged that you have taken something.</li>";
+        if(Lie === 'No' && Steal === 'No') evidenceList += "<li>You claimed you have never lied or stolen.</li>";
+        
+        if(Law === 'No') evidenceList += "<li>You agreed the Law cannot just forgive.</li>";
+        if(Judge === 'No') evidenceList += "<li>You agreed a Judge must punish crime.</li>";
+        if(Law === 'Yes' || Judge === 'Yes') evidenceList += "<li>You believe the Law/Judge can be flexible.</li>";
+        
+        // Q18 Evidence
+        if(DivineLaw === 'Yes') evidenceList += "<li>You believe God can forgive without punishment.</li>";
+
+        if(Type) evidenceList += `<li>You viewed God as: <strong>${Type}</strong>.</li>`;
+        
+        let evidence = `<div class="evidence-box"><strong>YOUR TESTIMONY:</strong><ul>${evidenceList}</ul></div>`;
+
+        // 1. PATH C: INNOCENT
+        if (!isGuilty) {
+            boxClass = "path-c";
+            message = `<h2 style="color:var(--warning)">THE HIGH STANDARD 🏔️</h2>${evidence}
+                <p>You aimed for innocence. That is a noble goal.</p>
+                <p style="font-weight: bold; font-size: 1.1em; color: var(--primary);">"The challenge is maintaining that perfect standard every single day. If you fail even once, the Law requires a penalty. Are you safe?"</p>`;
+        }
+        // 2. PATH D: GAMBLER (Human OR Divine leniency)
+        // If they think Human Judge is strict, but God is loose (Q18=Yes), they are also Gamblers
+        else if (!isStrictHuman || (isBeliever && DivineLaw === 'Yes')) {
+            boxClass = "path-d";
+            message = `<h2 style="color:var(--danger)">THE REALITY CHECK ⚖️</h2>${evidence}
+                <p>You admitted the mistake, but you believe the Judge/Law will overlook it.</p>
+                <p style="font-weight: bold; font-size: 1.1em; color: var(--primary);">"A Good Judge cannot overlook crime. You are betting on a Corrupt Judge to let you go. Is that a safe bet?"</p>`;
+        }
+        // 3. PATH B: SKEPTIC
+        else if (!isBeliever) {
+            boxClass = "path-b";
+            message = `<h2 style="color:var(--primary)">HONEST REFLECTION 🛡️</h2>${evidence}
+                <p>Based on your own honest confession, breaking the law requires a penalty.</p>
+                <p style="font-weight: bold; font-size: 1.1em; color: var(--primary);">"You are honest to the core. You chose Righteous Judgement based on a Powerful Law. Did you find the one who designed it?"</p>`;
+        }
+        // 4. PATH A: TARGET (Must be Strict Human AND Strict Divine)
+        else if (isBeliever && isGuilty && isStrictHuman && isStrictDivine && Type === 'Both') {
+            boxClass = "path-a";
+            message = `<h2 style="color:var(--success)">HONEST REFLECTION 🛡️</h2>${evidence}
+                <p>Based on your own honest confession, breaking the law requires a penalty.</p>
+                <p style="font-weight: bold; font-size: 1.1em; color: var(--primary);">"You are honest to the core. You chose that God has to be both, a Righteous Judge and a Forgiving God. Are you seeking him, yet?"</p>`;
+        }
+        // 5. PATH E: PARTIAL
+        else {
+            boxClass = "path-e";
+            message = `<h2 style="color:var(--purple)">THE PARTIAL TRUTH 🧩</h2>${evidence}
+                <p>You are honest about your guilt and strict about Justice.</p>
+                <p style="font-weight: bold; font-size: 1.1em; color: var(--primary);">"But you view God as only a ${Type}. If He is only a Judge, you are lost. If He is only a Friend, He is corrupt. He must be BOTH to save you. Do you know how He can be both?"</p>`;
+        }
+
+        const summaryBox = document.getElementById('summary-content');
+        summaryBox.innerHTML = message;
+        summaryBox.className = "summary-box " + boxClass;
+        showPage(4);
+    }
+
+    window.finishSurvey = function() { summarizeResults(); };
+    window.resetSurvey = function() { location.reload(); }; // Simple reset
+
+    window.onload = function() {
+        renderQuestions(questions.p1, 'q1-container', 1);
+        renderQuestions(questions.p2, 'q2-container', 5);
+        renderQuestions(questions.p3, 'q3-container', 10);
+        showPage(0);
+    };
+</script>
+
+</body>
+</html>
